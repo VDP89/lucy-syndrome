@@ -5,6 +5,8 @@
 > Companion code to [*The Lucy Syndrome and AI*](https://victordelpuerto.com/posts/lucy-syndrome/) —
 > an essay on why models forget every morning, and what an operator can
 > do about it.
+>
+> **Cite:** Del Puerto, V. (2026). *Lucy Syndrome in LLM Agents: A Practitioner Framework for Cross-Session Correction Persistence*. Zenodo. [doi:10.5281/zenodo.19555971](https://doi.org/10.5281/zenodo.19555971)
 
 ---
 
