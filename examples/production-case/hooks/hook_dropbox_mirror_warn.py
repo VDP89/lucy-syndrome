@@ -12,6 +12,17 @@ Si no, salida vacia (no estorba).
 import json
 import os
 import sys
+import time
+
+_START = time.time()
+
+# --- logger import ---
+try:
+    from pathlib import Path as _Path
+    sys.path.insert(0, str(_Path(__file__).parent.parent / "logs"))
+    from log_scar_fire import log_scar_fire as _log
+except Exception:
+    _log = None
 
 # Patrones de la copia Dropbox de DG Office
 MIRROR_PATTERNS = [
@@ -39,7 +50,7 @@ is_mirror = any(p in cwd_lower for p in MIRROR_PATTERNS)
 
 if is_mirror:
     msg = (
-        "⚠️  AVISO: estas trabajando desde la copia Dropbox de DG Office "
+        "AVISO: estas trabajando desde la copia Dropbox de DG Office "
         f"({cwd}). La auditoria de tokens 2026-04-24 detecto 16.6M tokens "
         f"consumidos en 72 sesiones desde esta copia (bootstrap duplicado). "
         f"Recomendacion: cerrar y reabrir Claude Code desde {CANONICAL_PATH}."
@@ -50,5 +61,21 @@ if is_mirror:
             "additionalContext": msg,
         }
     }
+
+    if _log:
+        _log(
+            scar_id="infra_001",
+            hook_id="hook_dropbox_mirror_warn",
+            event_type="SessionStart",
+            trigger_match=cwd[:200],
+            severity="warn",
+            tool_name=None,
+            context_injected=msg,
+            system_message="",
+            payload_raw=cwd,
+            start_time=_START,
+            criticidad="media",
+        )
+
     json.dump(output, sys.stdout)
 # silencio si no es mirror

@@ -25,7 +25,17 @@ Rollout:
 import json
 import re
 import sys
+import time
 from pathlib import Path
+
+_START = time.time()
+
+# --- logger import ---
+try:
+    sys.path.insert(0, str(Path(__file__).parent.parent / "logs"))
+    from log_scar_fire import log_scar_fire as _log
+except Exception:
+    _log = None
 
 # --- Configuracion ---
 
@@ -57,6 +67,9 @@ STOPWORDS = {
     "but", "yet", "not", "can", "may", "has", "have", "had", "are", "was",
     "project", "feedback", "reference", "user", "files", "file", "memory",
     "mem", "note", "notes",
+    # stopwords administrativos (evitar false positives en cierres de sesion)
+    "sesion", "session", "cerramos", "cerrar", "cerrar", "abrir", "guardar",
+    "despedir", "terminar", "finalizar", "listo", "listos", "hecho", "hechos",
 }
 
 # Frontmatter/indice a ignorar cuando hacemos parsing.
@@ -79,7 +92,7 @@ ENTRY_LINE_PATTERN = re.compile(
 
 MAX_RESULTS = 5
 MIN_KEYWORD_LEN = 4
-MIN_MATCH_COUNT = 1
+MIN_MATCH_COUNT = 2  # subido de 1 a 2 para reducir false positives (calibracion 2026-04-25)
 
 
 def extract_keywords(text: str) -> set:
@@ -123,7 +136,6 @@ def parse_memory_index(path: Path) -> list:
 
         # Keywords: combinamos basename (sin prefijo project_/feedback_/etc),
         # palabras del title, y primeras palabras del hook.
-        # Splitteamos _ y - para que "lucy" matchee con "project_lucy_lab.md".
         basename = file_ref.replace(".md", "").rsplit("/", 1)[-1]
         basename_clean = re.sub(r"^(project|feedback|reference|user|agent)_", "", basename)
         basename_words = re.sub(r"[_\-]", " ", basename_clean)
@@ -131,7 +143,7 @@ def parse_memory_index(path: Path) -> list:
         kw = set()
         kw.update(extract_keywords(basename_words))
         kw.update(extract_keywords(title))
-        kw.update(extract_keywords(hook[:120]))  # solo primer tramo del hook
+        kw.update(extract_keywords(hook[:120]))
 
         entries.append({
             "file": file_ref,
@@ -221,17 +233,34 @@ def main():
 
     context = build_context_message(prompt, matches, trigger_hit)
 
+    _sysmsg = (
+        f"scar_004 Etapa 0: expandir {len(matches[:MAX_RESULTS])} archivo(s) de memoria"
+        if matches else
+        "scar_004 Etapa 0: frase-trigger detectada, expandir memoria relevante"
+    )
+
     output = {
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
             "additionalContext": context,
         },
-        "systemMessage": (
-            f"scar_004 Etapa 0: expandir {len(matches[:MAX_RESULTS])} archivo(s) de memoria"
-            if matches else
-            "scar_004 Etapa 0: frase-trigger detectada, expandir memoria relevante"
-        ),
+        "systemMessage": _sysmsg,
     }
+
+    if _log:
+        _kw_summary = ", ".join(sorted({k for m in matches for k in m["matched"]})[:5]) if matches else "trigger_phrase"
+        _log(
+            scar_id="scar_004",
+            hook_id="hook_scar_004_expand",
+            event_type="UserPromptSubmit",
+            trigger_match=_kw_summary[:200],
+            severity="warn",
+            tool_name=None,
+            context_injected=context,
+            system_message=_sysmsg,
+            payload_raw=prompt[:500],
+            start_time=_START,
+        )
 
     json.dump(output, sys.stdout)
 

@@ -90,3 +90,4 @@
 | 2026-04-15 | scar_004 reincidence (A3.1): Etapa 0 added. hook_scar_004_expand.py deployed |
 | 2026-04-18 | scar_010–011 codified from ERGON brand session. Hooks for both activated. |
 | 2026-04-25 | Repository restructured as installable toolkit |
+| 2026-04-25 | Phase 2 logging: all 8 hooks instrumented with log_scar_fire(). fires.jsonl now collects activation data. I5 closed. |

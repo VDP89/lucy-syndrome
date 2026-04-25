@@ -8,6 +8,17 @@ emite warning. Severity: warn (no bloquea).
 import json
 import re
 import sys
+import time
+
+_START = time.time()
+
+# --- logger import ---
+try:
+    from pathlib import Path as _Path
+    sys.path.insert(0, str(_Path(__file__).parent.parent / "logs"))
+    from log_scar_fire import log_scar_fire as _log
+except Exception:
+    _log = None
 
 # Paths donde la regla aplica (deliverables de comunicacion publica)
 TRIGGER_PATH_FRAGMENTS = (
@@ -88,19 +99,36 @@ for pattern, label in PATTERNS:
 if not hits:
     sys.exit(0)
 
+_CONTEXT = (
+    "scar_010 (definir_por_lo_que_somos) | Estas escribiendo copy en un entregable "
+    "de marca/comunicacion con patrones de negacion que cierran puertas:\n- "
+    + "\n- ".join(hits[:5])
+    + "\n\nREGLA: copy publico describe SOLO lo que DG/ERGON/MARCO SON y HACEN. "
+    "Reformular en afirmativo antes de cerrar. Ver "
+    "D:/DG-2026_OFFICE/.claude/scarring/scar_010_definir_por_lo_que_somos.md"
+)
+_SYSMSG = f"scar_010 activo: {len(hits)} patron(es) de negacion en copy publico"
+
 output = {
     "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
-        "additionalContext": (
-            "scar_010 (definir_por_lo_que_somos) | Estas escribiendo copy en un entregable "
-            "de marca/comunicacion con patrones de negacion que cierran puertas:\n- "
-            + "\n- ".join(hits[:5])
-            + "\n\nREGLA: copy publico describe SOLO lo que DG/ERGON/MARCO SON y HACEN. "
-            "Reformular en afirmativo antes de cerrar. Ver "
-            "D:/DG-2026_OFFICE/.claude/scarring/scar_010_definir_por_lo_que_somos.md"
-        ),
+        "additionalContext": _CONTEXT,
     },
-    "systemMessage": f"scar_010 activo: {len(hits)} patron(es) de negacion en copy publico",
+    "systemMessage": _SYSMSG,
 }
+
+if _log:
+    _log(
+        scar_id="scar_010",
+        hook_id="hook_scar_010_no_cerrar_puertas",
+        event_type="PreToolUse",
+        trigger_match="; ".join(hits[:3])[:200],
+        severity="warn",
+        tool_name=data.get("tool_name", "Write"),
+        context_injected=_CONTEXT,
+        system_message=_SYSMSG,
+        payload_raw=content[:500],
+        start_time=_START,
+    )
 
 json.dump(output, sys.stdout)

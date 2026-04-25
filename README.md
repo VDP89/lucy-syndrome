@@ -67,6 +67,18 @@ The first time the trigger fires and the reminder injects automatically, the val
 
 ---
 
+## Observability: closing I5
+
+The fifth persistence invariant requires that every scar have a *refinable activation metric* — a way to know whether it is firing, whether it is preventing errors, and whether its trigger is too broad or too narrow.
+
+`logging/log_scar_fire.py` closes this gap. Every hook that calls it writes one JSON line to `fires.jsonl` on each fire, capturing: timestamp, session ID, scar ID, hook version, tokens injected, hook latency, trigger fragment, and payload hash.
+
+From this data, the nine Phase 2 metrics in [`docs/metrics.md`](docs/metrics.md) become computable — including `activation_rate`, `false_positive_rate`, `latency_overhead`, and `severity_adjusted_harm`.
+
+`install.sh` copies the logger to `.claude/scarring/logs/` automatically. `fires.jsonl` is gitignored by default. See [`logging/README.md`](logging/README.md) for the integration pattern.
+
+---
+
 ## Repository Structure
 
 ```
@@ -83,6 +95,11 @@ lucy-syndrome/
 │   ├── hook_template.py        ← blank hook to customize
 │   └── settings.json.example   ← Claude Code hook configuration
 │
+├── logging/                     ← Phase 2 observability
+│   ├── log_scar_fire.py        ← append-only JSONL logger (closes I5)
+│   ├── README.md               ← integration pattern + schema reference
+│   └── .gitignore              ← excludes fires.jsonl from git
+│
 ├── scars/                       ← generic example scars (domain-independent)
 │   ├── README.md               ← scar schema, rationale, adoption guide
 │   ├── scar_example_001_review_before_deliver.md
@@ -95,11 +112,16 @@ lucy-syndrome/
 │   ├── hook_session_start.py   ← injects scar summary at session start
 │   └── hook_example_review.py  ← fires on large code writes (for scar_example_001)
 │
+├── docs/
+│   ├── logging-schema.json     ← JSON Schema for fires.jsonl entries (18 fields)
+│   ├── metrics.md              ← 9 Phase 2 metrics derived from fires.jsonl
+│   └── escalation-policy.md   ← thresholds for warn→deny escalation
+│
 ├── examples/
 │   └── production-case/         ← real 11 scars + 8 hooks from production
 │       ├── README.md           ← context: civil engineering operation, 163 findings
 │       ├── scars/              ← the actual production scar files
-│       └── hooks/              ← the actual production hook scripts
+│       └── hooks/              ← the actual production hook scripts (with logging)
 │
 └── research/
     ├── paper.md                 ← The Lucy Syndrome and AI (full paper text)

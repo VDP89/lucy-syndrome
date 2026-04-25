@@ -5,6 +5,9 @@ Inyecta resumen del SCARRING_INDEX como additionalContext al inicio de sesion.
 """
 import json
 import sys
+import time
+
+_START = time.time()
 
 context = (
     "Sistema RECUERDOS activo (Fase 2 hooks). "
@@ -26,5 +29,27 @@ output = {
         "additionalContext": context,
     }
 }
+
+# --- logging ---
+try:
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent.parent / "logs"))
+    from log_scar_fire import log_scar_fire as _log
+    _log(
+        scar_id="session_start",
+        hook_id="hook_session_start",
+        event_type="SessionStart",
+        trigger_match="SessionStart",
+        severity="warn",
+        tool_name=None,
+        context_injected=context,
+        system_message="",
+        payload_raw="SessionStart",
+        start_time=_START,
+        criticidad="baja",
+    )
+except Exception:
+    pass
 
 json.dump(output, sys.stdout)

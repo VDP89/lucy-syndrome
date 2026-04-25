@@ -32,6 +32,7 @@ fi
 CLAUDE_DIR="${PROJECT_DIR}/.claude"
 SCARRING_DIR="${CLAUDE_DIR}/scarring"
 HOOKS_DIR="${SCARRING_DIR}/hooks"
+LOGS_DIR="${SCARRING_DIR}/logs"
 
 # ---- Warn if already installed ----
 if [ -d "$SCARRING_DIR" ]; then
@@ -42,8 +43,10 @@ fi
 
 # ---- Create directories ----
 mkdir -p "$HOOKS_DIR"
+mkdir -p "$LOGS_DIR"
 echo "Created: $SCARRING_DIR"
 echo "Created: $HOOKS_DIR"
+echo "Created: $LOGS_DIR"
 
 # ---- Copy scar template (as first scar placeholder) ----
 FIRST_SCAR="${SCARRING_DIR}/scar_001_your_first_scar.md"
@@ -52,6 +55,22 @@ if [ ! -f "$FIRST_SCAR" ]; then
   echo "Copied:  $FIRST_SCAR"
 else
   echo "Skipped: $FIRST_SCAR (already exists)"
+fi
+
+# ---- Copy logger module ----
+LOGGER_DEST="${LOGS_DIR}/log_scar_fire.py"
+if [ ! -f "$LOGGER_DEST" ]; then
+  cp "${REPO_DIR}/logging/log_scar_fire.py" "$LOGGER_DEST"
+  echo "Copied:  $LOGGER_DEST"
+else
+  echo "Skipped: $LOGGER_DEST (already exists)"
+fi
+
+# ---- Create logs .gitignore (fires.jsonl is operational data, not code) ----
+LOGS_GITIGNORE="${LOGS_DIR}/.gitignore"
+if [ ! -f "$LOGS_GITIGNORE" ]; then
+  cp "${REPO_DIR}/logging/.gitignore" "$LOGS_GITIGNORE"
+  echo "Copied:  $LOGS_GITIGNORE"
 fi
 
 # ---- Copy generic hooks ----
@@ -117,7 +136,11 @@ echo "  2. Configure hooks in your Claude Code settings:"
 echo "       ${SETTINGS_EXAMPLE}  ← example to adapt"
 echo "       ${CLAUDE_DIR}/settings.json  ← merge the 'hooks' key into here"
 echo ""
-echo "  3. Optionally review the production case for inspiration:"
+echo "  3. Add log_scar_fire() calls to your hooks (see logging/README.md):"
+echo "       ${LOGS_DIR}/log_scar_fire.py  ← already installed"
+echo "       ${REPO_DIR}/logging/README.md  ← integration pattern"
+echo ""
+echo "  4. Optionally review the production case for inspiration:"
 echo "       ${REPO_DIR}/examples/production-case/"
 echo ""
 echo "  4. Read the framework guide:"

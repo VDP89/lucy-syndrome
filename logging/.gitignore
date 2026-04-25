@@ -1,0 +1,3 @@
+# fires.jsonl contains operational data — do not commit
+fires.jsonl
+*.jsonl
