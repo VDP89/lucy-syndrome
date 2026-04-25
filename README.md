@@ -1,172 +1,166 @@
-# The Lucy Syndrome
+# Lucy Syndrome
 
-> Hooks and scars I use to keep an LLM from making the same mistake twice.
->
-> Companion code to [*The Lucy Syndrome and AI*](https://victordelpuerto.com/posts/lucy-syndrome/) —
-> an essay on why models forget every morning, and what an operator can
-> do about it.
->
-> **Cite:** Del Puerto, V. (2026). *Lucy Syndrome in LLM Agents: A Practitioner Framework for Cross-Session Correction Persistence*. Zenodo. [doi:10.5281/zenodo.19555971](https://doi.org/10.5281/zenodo.19555971)
+**A practitioner framework for making LLM corrections persist across sessions.**
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19555971.svg)](https://doi.org/10.5281/zenodo.19555971)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
-## The short version
+> *"Every session starts from zero. I've built the equivalent of Henry's videos — a system prompt, knowledge base overlays, instruction files. Every morning, the system reads its 'video' and functions. Often brilliantly. But it doesn't remember watching it yesterday."*
+>
+> — [The Lucy Syndrome and AI](https://victordelpuerto.com/posts/lucy-syndrome/)
 
-A large language model does not remember yesterday. Every session
-begins from the same frozen weights, the same priors, the same blind
-spots. Corrections made last week — even when documented, even when
-loaded back into context — do not carry the weight of having been
-made. Reading that fire burns is not the same as having been burned.
+---
 
-The essay is about that gap. This repository is what I built to
-close it in my own operation.
+## What This Is
 
-It contains five **functional scars**: short documents that record a
-mistake I already made once, along with the specific operational
-rule I now apply so the same mistake cannot repeat silently. Four
-of them are enforced by Claude Code hooks that fire automatically at
-the triggering event. None of the hooks block anything; they only
-inject reminder context.
+Large Language Model agents operating in production environments systematically lose corrections between sessions. An operator fixes an error, the model acknowledges the fix, and the next session reproduces the original mistake as if the correction never happened.
 
-This is not a framework, a paper, or a product. It is a small,
-pragmatic toolkit born from running a civil engineering firm on top
-of Claude Code for several months. It is the minimum-viable version
-of a practice, not a finished one.
+This repository is a practitioner framework for closing that gap. It contains:
 
-## What is in this repository
+- **Functional scars** — short structured documents that record a mistake, why it recurs, and the specific operational rule that prevents repetition
+- **Claude Code hooks** — Python scripts that enforce those rules automatically at inference time, without requiring discipline from the operator
+- **An install script** — to bootstrap the system into your own project in under two minutes
+- **A production case study** — the actual 11 scars and 8 hooks from a civil engineering firm running 9 business areas through Claude Code, grounded in 163 findings extracted from 17 operational session logs
+
+The companion research paper (DOI: [10.5281/zenodo.19555971](https://doi.org/10.5281/zenodo.19555971)) describes the underlying dataset, the five persistence invariants, and the three-layer implementation model.
+
+---
+
+## Why It Matters
+
+The standard industry solutions — system prompts, knowledge bases, memory systems, RAG — share a fundamental limitation: they present information, but do not create the weight of experience. A correction documented after a costly mistake gets read with the same attention as a style preference. There is no mechanism for "this one matters more because it hurt last time."
+
+Functional scars are an attempt to build that mechanism. The research identifies five invariants that distinguish corrections that persist from those that decay:
+
+1. **Binary rule** — expressible as a concrete check, not a judgment call
+2. **Durable physical support** — lives in a file the model reads every session
+3. **Structural integration** — wired into the output format, not appended as an afterthought
+4. **Non-passive technical trigger** — a hook that fires at the moment of risk, not just at session start
+5. **Refinable activation metric** — tracks its own success/failure so it can be sharpened over time
+
+Scars satisfying all five invariants in the dataset have a measured escape rate below 10%. Rules failing any single invariant have rates above 30%.
+
+---
+
+## Quick Start
+
+### Install into your Claude Code project
+
+```bash
+git clone https://github.com/Vdp89/lucy-syndrome.git
+cd lucy-syndrome
+./install.sh /path/to/your/project
+```
+
+The script creates `.claude/scarring/` in your project with a blank scar template and a minimal session-start hook. From there, add your own scars as mistakes accumulate.
+
+### Your first scar
+
+1. Copy `framework/scar_template.md` to `.claude/scarring/scar_001_your_mistake.md`
+2. Fill in the six sections: what happened, where it applies, why it is forgotten, the fix, how to verify, metrics
+3. Edit `hooks/hook_session_start.py` to include a one-line summary of the new scar
+4. Wire the hook into `.claude/settings.json` (see `framework/settings.json.example`)
+
+The first time the trigger fires and the reminder injects automatically, the value of the system becomes concrete.
+
+---
+
+## Repository Structure
 
 ```
 lucy-syndrome/
-├── README.md                 ← you are here
-├── LICENSE                   ← Apache 2.0
-├── NOTICE.md                 ← what is NOT here + attribution
+├── README.md                    ← you are here
+├── LICENSE                      ← Apache 2.0
+├── NOTICE.md                    ← attribution and what is not here
+├── CITATION.cff                 ← academic citation file
+├── install.sh                   ← bootstrap script
 │
-├── scars/                    ← the five functional scars
-│   ├── README.md             ← what a scar is, how to read one, how to write your own
-│   ├── scar_001_docx_tildes.md
-│   ├── scar_002_code_review_absent.md
-│   ├── scar_003_token_budget.md
-│   ├── scar_004_consult_kb_first.md
-│   └── scar_005_validate_subagent_output.md
+├── framework/                   ← templates and guides
+│   ├── README.md               ← how the framework works end to end
+│   ├── scar_template.md        ← blank scar to fill in
+│   ├── hook_template.py        ← blank hook to customize
+│   └── settings.json.example   ← Claude Code hook configuration
 │
-└── hooks/                    ← Claude Code hooks (reference implementation)
-    ├── README.md             ← install guide, hook anatomy, how to adapt
-    ├── REVERSIBILITY.md      ← how to disable or roll back
-    ├── settings.json.example ← copy-paste wiring for .claude/settings.json
-    ├── hook_session_start.py
-    ├── hook_scar_001_docx.py
-    ├── hook_scar_002_size.py
-    └── hook_scar_005_subagent.py
+├── scars/                       ← generic example scars (domain-independent)
+│   ├── README.md               ← scar schema, rationale, adoption guide
+│   ├── scar_example_001_review_before_deliver.md
+│   ├── scar_example_002_verify_before_claiming.md
+│   └── scar_example_003_check_context_before_generating.md
+│
+├── hooks/                       ← generic hooks for the example scars
+│   ├── README.md               ← hook anatomy and adaptation guide
+│   ├── REVERSIBILITY.md        ← how to disable or roll back hooks safely
+│   ├── hook_session_start.py   ← injects scar summary at session start
+│   └── hook_example_review.py  ← fires on large code writes (for scar_example_001)
+│
+├── examples/
+│   └── production-case/         ← real 11 scars + 8 hooks from production
+│       ├── README.md           ← context: civil engineering operation, 163 findings
+│       ├── scars/              ← the actual production scar files
+│       └── hooks/              ← the actual production hook scripts
+│
+└── research/
+    ├── paper.md                 ← The Lucy Syndrome and AI (full paper text)
+    ├── statistics.md            ← dataset statistics: 163 findings, 4 categories
+    └── cross-analysis.md        ← persistence invariants and cross-category analysis
 ```
 
-## The five scars
+---
 
-| Scar | Severity | Hook | What it catches |
-|---|---|---|---|
-| [`scar_001`](scars/scar_001_docx_tildes.md) | medium | yes | Accents silently stripped from uppercase headings in generated DOCX files |
-| [`scar_002`](scars/scar_002_code_review_absent.md) | high | yes | Large generated code blocks shipping without a source-level review |
-| [`scar_003`](scars/scar_003_token_budget.md) | medium | no | Token budget drained by missing `/clear`, unused MCP servers, and subagent-model defaults |
-| [`scar_004`](scars/scar_004_consult_kb_first.md) | high | no | Generating a response before consulting the project knowledge base |
-| [`scar_005`](scars/scar_005_validate_subagent_output.md) | high | yes | A subagent silently omitting a file from a batch without reporting it |
+## The Production Case
 
-## Quickstart
+`examples/production-case/` contains the actual operational scars and hooks from a civil engineering firm in Paraguay running nine business areas through Claude Code. The underlying dataset: 163 findings extracted from 17 source files (15 Claude Code session logs, 2 ChatGPT memory exports), spanning August 2025 to April 2026.
 
-Install the hooks in your own Claude Code project:
+This is not a cleaned-up demo. These are the real files — including the failures, the reincidences, and the evolution of each rule as the system learned what it took to make a correction stick. The production case includes 11 scars and 8 hooks across four hook event types: `SessionStart`, `PreToolUse`, and `UserPromptSubmit`.
 
-```bash
-git clone https://github.com/VDP89/lucy-syndrome.git
-cd lucy-syndrome
+Key findings from the production dataset:
 
-# Copy the hooks into your project
-mkdir -p /path/to/your-project/.claude/hooks
-cp hooks/hook_*.py /path/to/your-project/.claude/hooks/
+- **163 findings** across 4 categories: 37 repeated errors (A), 55 successful corrections (B), 29 false confidences (C), 42 metacognitive frictions (D)
+- **Ratio B/A = 1.49** — for every repeated error, approximately 1.5 successful corrections. RIALTO, the project with the densest scar-like system (67+ numbered rules), had the highest correction density in the dataset
+- **Rule shape predicts persistence**: binary rules leak at 17%, proportional/conditional rules leak at 75–100%
+- **Verbal corrections with no physical support** have a measured escape rate of 100%
 
-# Merge settings.json.example into your project's .claude/settings.json
-# (adjusting the command paths to point at .claude/hooks/ if needed)
+---
+
+## Research
+
+The companion paper is available in three places:
+
+- **Full text**: [`research/paper.md`](research/paper.md) in this repository
+- **Zenodo** (citable preprint with DOI): [doi:10.5281/zenodo.19555971](https://doi.org/10.5281/zenodo.19555971)
+- **Web** (annotated, with commentary): [victordelpuerto.com/posts/lucy-syndrome/](https://victordelpuerto.com/posts/lucy-syndrome/)
+
+---
+
+## Citation
+
+```bibtex
+@misc{delpuerto2026lucy,
+  author    = {Del Puerto, Victor Daniel},
+  title     = {Lucy Syndrome in LLM Agents: A Practitioner Framework
+               for Cross-Session Correction Persistence},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.19555971},
+  url       = {https://doi.org/10.5281/zenodo.19555971}
+}
 ```
 
-Claude Code watches `settings.json` live; the hooks take effect on
-the next tool call. Verify the `SessionStart` hook by starting a new
-session — you should see the scar summary appear in the model's
-context.
+See [CITATION.cff](CITATION.cff) for CFF format.
 
-Read [`hooks/REVERSIBILITY.md`](hooks/REVERSIBILITY.md) before
-installing. All four hooks are warn-only; disabling them is a
-single-file edit.
-
-## How to use this repository
-
-The scars are not a checklist to adopt wholesale. They are worked
-examples. For each one:
-
-1. Read the origin section. If the failure shape does not match
-   something that could happen in your own work, the scar does not
-   apply to you. Skip it.
-2. If the shape matches, read the trigger section. Translate the
-   trigger into your own environment (your file paths, your
-   extensions, your task shapes).
-3. Copy the hook, adapt the `additionalContext` text to reference
-   your own paths, install it.
-4. Track failures. When the scar fires but the mistake still
-   happens, the trigger or the fix needs sharpening. Edit the
-   scar doc in your fork.
-
-If you want to write your own scars, the `scars/README.md` file has
-a section on how to do that. The short version: wait for a real
-failure, name the trigger narrowly, make the fix cheap, add a hook
-if you can.
-
-## Why "Lucy"
-
-From the movie *50 First Dates*. Lucy Whitmore wakes up every
-morning with no memory of the day before — a brain injury wiped her
-ability to convert short-term memories into long-term ones. Her
-boyfriend Henry plays her a video every morning that recaps their
-relationship. She watches, orients, functions. Some days
-brilliantly. And she never — not once — remembers watching it.
-
-The essay argues that large language models have the same condition,
-and that the industry's current solutions (context windows, system
-prompts, knowledge bases, memory systems, RAG) are all Henry's
-videos in one form or another. They work, and they are not nothing,
-but they do not change the underlying condition. The scar mechanism
-is a different class of intervention: it makes a prior mistake
-structurally harder to repeat, rather than trying to make the model
-remember.
-
-The full argument, with the supporting cases and the framework it
-derives, is in the [essay](https://victordelpuerto.com/posts/lucy-syndrome/).
+---
 
 ## License
 
-Apache License 2.0. See [`LICENSE`](LICENSE).
+Apache 2.0 — see [LICENSE](LICENSE).
 
-The Apache license was chosen over MIT because of its explicit
-patent grant. The code in this repository is small enough that this
-is almost certainly overkill, but costs nothing and protects
-downstream adopters in the edge case where something derivative
-gets patented.
+The research paper (`research/paper.md`) is © Victor Daniel Del Puerto Gauto, all rights reserved; included here to accompany the code. See [NOTICE.md](NOTICE.md) for full attribution.
 
-## Attribution
+---
 
-If you adopt material from this repository, you are not required to
-cite it — the license covers attribution legally. Linking to the
-essay and the repository when discussing the framework is useful
-because the vocabulary depends on shared citation to spread.
+## Author
 
-Suggested citation for written work:
-
-> Del Puerto Gauto, Victor Daniel. *The Lucy Syndrome and AI.*
-> Independent research, 2026.
-> <https://victordelpuerto.com/posts/lucy-syndrome/>
-
-## Contact
-
-Victor Daniel Del Puerto Gauto — civil engineer and independent
-researcher, based in Paraguay. Writing and research at
-[victordelpuerto.com](https://victordelpuerto.com).
-
-For advisory on LLM operations in production — adapting the
-framework to your own environment, designing your own scars,
-auditing a running workflow for Lucy Syndrome failure modes — see
-the contact information on the blog.
+Victor Daniel Del Puerto Gauto
+[victordelpuerto.com](https://victordelpuerto.com) · [info@dgingenieriasrl.com](mailto:info@dgingenieriasrl.com)

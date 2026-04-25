@@ -1,0 +1,45 @@
+{
+  "$comment": "Example Claude Code settings.json wiring for the Lucy Syndrome hooks. Merge the 'hooks' key into your project's .claude/settings.json. Adjust paths if you place hooks somewhere other than .claude/scarring/hooks/. All hooks are warn-only: none block tool calls, they only inject reminder context.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".claude/scarring/hooks/hook_session_start.py\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".claude/scarring/hooks/hook_example_review.py\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".claude/scarring/hooks/hook_batch_coverage.py\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".claude/scarring/hooks/hook_expand_memory.py\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

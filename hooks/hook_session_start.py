@@ -1,37 +1,46 @@
 #!/usr/bin/env python3
 """
-SessionStart hook — Lucy Syndrome / functional scars
+Hook SessionStart — Lucy Syndrome scarring system
+Injects a summary of active scars as additionalContext at the start of every session.
 
-Injects a short summary of active scars as additionalContext at the start
-of every Claude Code session so the model is primed with the list of
-known traps before any work begins.
-
-Severity: warn (no blocking, context injection only).
+Customize: edit the SCARS list below with your own scar IDs, names, severities,
+and one-line descriptions. Keep each entry short — this fires on every session start.
 """
 import json
 import sys
 
-# Consume stdin even if unused (avoids broken pipe when harness passes data)
-try:
-    sys.stdin.read()
-except Exception:
-    pass
+# ---- Edit this list to match your active scars ----
+SCARS = [
+    ("scar_001", "review_before_deliver", "high",
+     "3-step self-review before delivering any code >200 lines"),
+    ("scar_002", "verify_before_claiming", "critical",
+     "no URL = no item; never compute day-of-week from memory"),
+    ("scar_003", "check_context_before_generating", "high",
+     "read the KB before generating — index entries are not content"),
+    # Add your own scars here:
+    # ("scar_004", "your_scar_name", "medium", "one-line description"),
+]
 
-context = (
-    "Functional scars active (Lucy Syndrome Phase 2 hooks). "
-    "Scars live in ./scars/:\n"
-    "- scar_001 docx_tildes [medium]: run fix_tildes after generating DOCX\n"
-    "- scar_002 code_review_absent [high]: large code blocks require 3-step self-review\n"
-    "- scar_003 token_budget [medium]: monitor context on long sessions\n"
-    "- scar_004 consult_kb_first [high]: read project knowledge base before generating\n"
-    "- scar_005 validate_subagent_output [high]: subagents must report BATCH COVERAGE\n\n"
-    "Before any substantive technical task, re-read the relevant scar_NNN_*.md."
-)
+SCAR_DIR = ".claude/scarring"  # Adjust to your project's scar location
+
+
+def build_context() -> str:
+    lines = [
+        "Scarring system active. Active scars in " + SCAR_DIR + ":\n"
+    ]
+    for scar_id, name, severity, description in SCARS:
+        lines.append(f"- {scar_id} {name} [{severity}]: {description}")
+    lines.append(
+        "\nBefore starting technical work, check relevant scar files if the task "
+        "matches a known trigger. See SCARRING_INDEX.md for the full list."
+    )
+    return "\n".join(lines)
+
 
 output = {
     "hookSpecificOutput": {
         "hookEventName": "SessionStart",
-        "additionalContext": context,
+        "additionalContext": build_context(),
     }
 }
 

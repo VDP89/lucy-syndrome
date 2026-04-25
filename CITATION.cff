@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this framework, please cite it as below."
+type: software
+authors:
+  - family-names: Del Puerto Gauto
+    given-names: Victor Daniel
+    email: info@dgingenieriasrl.com
+    website: "https://victordelpuerto.com"
+title: "Lucy Syndrome — A Practitioner Framework for LLM Cross-Session Correction Persistence"
+version: "1.1.0"
+date-released: "2026-04-25"
+url: "https://github.com/Vdp89/lucy-syndrome"
+repository-code: "https://github.com/Vdp89/lucy-syndrome"
+license: Apache-2.0
+keywords:
+  - LLM
+  - Claude Code
+  - AI agents
+  - correction persistence
+  - operational AI
+  - hooks
+  - memory
+abstract: >
+  A practitioner framework for making LLM corrections persist across sessions.
+  Contains functional scars (structured documents recording past mistakes and
+  the operational rules that prevent their recurrence) and Claude Code hooks
+  (Python scripts that enforce those rules automatically at inference time).
+  Grounded in 163 findings extracted from 17 production session logs across
+  a civil engineering operation.
+references:
+  - type: article
+    title: "Lucy Syndrome in LLM Agents: A Practitioner Framework for Cross-Session Correction Persistence"
+    authors:
+      - family-names: Del Puerto Gauto
+        given-names: Victor Daniel
+    doi: 10.5281/zenodo.19555971
+    year: 2026
+    url: "https://doi.org/10.5281/zenodo.19555971"
+    notes: "Companion research paper. Full text also available at research/paper.md in this repository."
