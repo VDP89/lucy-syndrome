@@ -1,137 +1,140 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ScarFireEvent",
-  "description": "Log entry for a functional scar hook fire. Append to fires.jsonl (one JSON object per line). See docs/metrics.md for how these fields power the 9 Phase 2 metrics.",
-  "type": "object",
-  "required": [
-    "timestamp",
-    "session_id",
-    "event_id",
-    "scar_id",
-    "hook_id",
-    "hook_version",
-    "model",
-    "project_id",
-    "event_type",
-    "tool_name",
-    "trigger_match",
-    "latency_ms",
-    "tokens_added",
-    "severity",
-    "outcome",
-    "criticidad",
-    "payload_hash",
-    "reviewed_by_human"
-  ],
-  "properties": {
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 with timezone. Example: 2026-04-27T09:14:32-04:00"
+  "definitions": {
+    "ScarFireEvent": {
+      "title": "ScarFireEvent",
+      "description": "Log entry for a functional scar hook fire. Append to fires.jsonl (one JSON object per line). Phase 3 adds 'opportunity' and 'project_context' fields — existing readers that ignore unknown fields remain compatible.",
+      "type": "object",
+      "required": [
+        "timestamp", "session_id", "event_id", "scar_id", "hook_id",
+        "hook_version", "model", "project_id", "event_type", "tool_name",
+        "trigger_match", "latency_ms", "tokens_added", "severity",
+        "outcome", "criticidad", "payload_hash", "reviewed_by_human"
+      ],
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "session_id": { "type": "string", "description": "sha256(cwd + date)[:8]" },
+        "event_id": { "type": "string", "format": "uuid" },
+        "scar_id": {
+          "type": "string",
+          "description": "Pattern scar_NNN. Non-scar hooks use infra_NNN or session_start."
+        },
+        "hook_id": { "type": "string" },
+        "hook_version": { "type": "string" },
+        "model": { "type": "string" },
+        "project_id": { "type": "string" },
+        "event_type": {
+          "type": "string",
+          "enum": ["SessionStart", "PreToolUse", "PostToolUse", "UserPromptSubmit"]
+        },
+        "tool_name": { "type": ["string", "null"] },
+        "trigger_match": { "type": "string", "maxLength": 200 },
+        "latency_ms": { "type": "number", "minimum": 0 },
+        "tokens_added": { "type": "integer", "minimum": 0 },
+        "severity": { "type": "string", "enum": ["warn", "confirm", "deny"] },
+        "outcome": {
+          "type": "string",
+          "enum": ["prevented", "leaked", "false_positive", "unknown",
+                   "error_prevented", "error_repeated", "error_despite_fire"],
+          "description": "Operator-set after review. 'prevented'/'error_prevented': error did not occur. 'leaked'/'error_despite_fire': error occurred despite fire. 'false_positive': fire not warranted. 'error_repeated': same error recurred post-scar."
+        },
+        "criticidad": {
+          "type": "string",
+          "enum": ["critica", "alta", "media", "baja"]
+        },
+        "payload_hash": { "type": "string", "description": "sha256:<hex> of trigger content" },
+        "reviewed_by_human": { "type": "boolean" },
+        "notes": { "type": ["string", "null"] },
+        "opportunity": {
+          "type": "boolean",
+          "default": true,
+          "description": "Phase 3: every fire is by definition a covered opportunity. Always true for fires."
+        },
+        "project_context": {
+          "type": ["string", "null"],
+          "description": "Phase 3: project slug for cross-project analysis. e.g. 'project_a', 'other'."
+        }
+      }
     },
-    "session_id": {
-      "type": "string",
-      "description": "Claude Code session identifier. Use the first 8 chars of a hash of the session start timestamp + working directory."
-    },
-    "event_id": {
-      "type": "string",
-      "format": "uuid",
-      "description": "UUID v4, unique per fire event."
-    },
-    "scar_id": {
-      "type": "string",
-      "pattern": "^scar_[0-9]{3}$",
-      "description": "Scar identifier. Examples: scar_001, scar_004, scar_011."
-    },
-    "hook_id": {
-      "type": "string",
-      "description": "Script name without .py extension. Example: hook_scar_001_docx"
-    },
-    "hook_version": {
-      "type": "string",
-      "description": "Semantic version of the hook script at fire time. Example: 1.2.0. Increment when the filter logic changes."
-    },
-    "model": {
-      "type": "string",
-      "description": "Active LLM model ID. Example: claude-sonnet-4-6"
-    },
-    "project_id": {
-      "type": "string",
-      "description": "Identifier for the working directory / project. Use a short hash or slug. Sanitize — no full paths."
-    },
-    "event_type": {
-      "type": "string",
-      "enum": ["SessionStart", "PreToolUse", "PostToolUse", "UserPromptSubmit"],
-      "description": "Claude Code hook event type that triggered this fire."
-    },
-    "tool_name": {
-      "type": ["string", "null"],
-      "description": "Tool name that triggered the PreToolUse/PostToolUse event. Null for SessionStart and UserPromptSubmit."
-    },
-    "trigger_match": {
-      "type": "string",
-      "description": "Fragment of the input that matched the hook filter. Keep short (<200 chars). Used for filter refinement."
-    },
-    "latency_ms": {
-      "type": "number",
-      "minimum": 0,
-      "description": "Hook execution time in milliseconds. Measures overhead added to each tool call."
-    },
-    "tokens_added": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Total tokens injected by this hook fire (additionalContext + systemMessage combined)."
-    },
-    "severity": {
-      "type": "string",
-      "enum": ["warn", "confirm", "deny"],
-      "description": "Severity level of this scar at fire time. Most scars start at 'warn'. See escalation-policy.md."
-    },
-    "outcome": {
-      "type": "string",
-      "enum": ["prevented", "leaked", "false_positive", "unknown"],
-      "description": "Result of the hook fire. 'prevented': error did not occur. 'leaked': error occurred despite fire. 'false_positive': hook fired but error was not imminent. 'unknown': not yet reviewed. Set by operator after reviewing the session."
-    },
-    "criticidad": {
-      "type": "string",
-      "enum": ["critica", "alta", "media", "baja"],
-      "description": "Criticality level of the scar as defined in scar_NNN.md."
-    },
-    "payload_hash": {
-      "type": "string",
-      "description": "SHA-256 of the tool_input that triggered the hook. Enables reproducibility without logging sensitive content. Format: sha256:<hex>."
-    },
-    "reviewed_by_human": {
-      "type": "boolean",
-      "description": "True if the operator has reviewed this entry and set outcome/false_positive manually. False means 'outcome' is still 'unknown'."
-    },
-    "notes": {
-      "type": ["string", "null"],
-      "description": "Optional operator notes. Useful for capturing why a fire was a false positive or what the error looked like."
+    "OpportunityEvent": {
+      "title": "OpportunityEvent",
+      "description": "Log entry for a candidate opportunity detected by the observer hook. Append to opportunities.jsonl. The validated field is populated by the operator via validate_opportunities.py.",
+      "type": "object",
+      "required": [
+        "timestamp", "session_id", "event_id", "scar_id",
+        "candidate", "validated", "fired", "source"
+      ],
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "session_id": { "type": "string" },
+        "event_id": { "type": "string", "format": "uuid" },
+        "scar_id": { "type": "string" },
+        "candidate": { "type": "boolean", "const": true },
+        "validated": {
+          "type": ["boolean", "null"],
+          "description": "null = pending review. true = real opportunity. false = false positive (observer over-detected)."
+        },
+        "fired": {
+          "type": "boolean",
+          "description": "true if a matching fire was recorded for this opportunity. Set by linkage analysis."
+        },
+        "source": { "type": "string", "const": "observer" },
+        "event_type": {
+          "type": "string",
+          "enum": ["SessionStart", "PreToolUse", "PostToolUse", "UserPromptSubmit"]
+        },
+        "tool_name": { "type": ["string", "null"] },
+        "context_hash": { "type": "string", "description": "sha256[:16] of file_path + content[:200]" },
+        "project_id": { "type": "string" },
+        "project_context": { "type": "string" },
+        "notes": { "type": "string" },
+        "validated_at": { "type": "string", "format": "date-time", "description": "Set by validate_opportunities.py" }
+      }
     }
   },
-  "additionalProperties": false,
+  "oneOf": [
+    { "$ref": "#/definitions/ScarFireEvent" },
+    { "$ref": "#/definitions/OpportunityEvent" }
+  ],
   "examples": [
     {
-      "timestamp": "2026-04-27T09:14:32-04:00",
-      "session_id": "a3f2b891",
+      "timestamp": "2026-04-25T10:00:00-03:00",
+      "session_id": "adf55110",
       "event_id": "550e8400-e29b-41d4-a716-446655440000",
-      "scar_id": "scar_001",
-      "hook_id": "hook_scar_001_docx",
+      "scar_id": "scar_002",
+      "hook_id": "hook_scar_002_size",
       "hook_version": "1.0.0",
       "model": "claude-sonnet-4-6",
-      "project_id": "dg-office",
+      "project_id": "bd7c36a3",
       "event_type": "PreToolUse",
       "tool_name": "Write",
-      "trigger_match": "generate_docx.py — docx",
-      "latency_ms": 12.4,
-      "tokens_added": 87,
+      "trigger_match": "analyze.py — 273 lines",
+      "latency_ms": 24.1,
+      "tokens_added": 91,
       "severity": "warn",
       "outcome": "unknown",
-      "criticidad": "media",
-      "payload_hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "criticidad": "alta",
+      "payload_hash": "sha256:abc123",
       "reviewed_by_human": false,
-      "notes": null
+      "notes": null,
+      "opportunity": true,
+      "project_context": "project_a"
+    },
+    {
+      "timestamp": "2026-04-25T10:00:01-03:00",
+      "session_id": "adf55110",
+      "event_id": "660e9500-f30c-52e5-b827-557766551111",
+      "scar_id": "scar_002",
+      "candidate": true,
+      "validated": null,
+      "fired": false,
+      "source": "observer",
+      "event_type": "PostToolUse",
+      "tool_name": "Write",
+      "context_hash": "sha256:def456abcdef01",
+      "project_id": "bd7c36a3",
+      "project_context": "project_a",
+      "notes": "code write 85L: utils.py"
     }
   ]
 }

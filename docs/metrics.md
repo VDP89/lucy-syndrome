@@ -119,3 +119,54 @@
 ---
 
 *Specification derived from Deep Research report reviewed 2026-04-25. Compatible with Lucy Syndrome paper Zenodo v3 (DOI: 10.5281/zenodo.19555971).*
+
+---
+
+## Phase 3 Extension: Opportunity-Based Coverage
+
+> Added 2026-04-25. Requires `opportunities.jsonl` (populated by `opportunity_observer`).
+
+The Phase 2 "Coverage" metric (`scars_with_hook / total_scars`) measures **instrumentation** coverage — how many scars have hooks. It does not measure whether the hooks actually catch the errors they exist to catch.
+
+Phase 3 replaces this with **recall-based coverage**:
+
+### Updated: `coverage` (Phase 3)
+
+**Definition:** Proportion of real opportunities where a fire was recorded.  
+**Formula:** `confirmed_fires / (confirmed_fires + confirmed_missed_opportunities)`  
+**Where:**  
+  - `confirmed_fires` = fires where a matching opportunity was validated  
+  - `confirmed_missed_opportunities` = opportunities where `validated=true` and `fired=false`  
+**Unit:** %  
+**Source:** `fires.jsonl` + `opportunities.jsonl` (semi-automated; requires operator validation)  
+**Interpretation:** 100% means every real opportunity resulted in a fire. 60% means 40% of the time the scar context existed but the hook did not fire — a gap to close by broadening the trigger.
+
+### New: `recall`
+
+**Definition:** Of all contexts where a scar should apply, what fraction does the hook detect?  
+**Formula:** `fires / total_opportunities` (unvalidated denominator)  
+**Note:** Lower bound on true recall since `opportunities.jsonl` may not capture all contexts.
+
+### New: `activation_rate` (Phase 3 re-definition)
+
+In Phase 3, `activation_rate = fires / opportunities` (not fires/day).  
+A rate of 0.3 means the hook fires on 30% of detected opportunities — useful for calibrating trigger breadth.
+
+---
+
+### Validation workflow
+
+Opportunities start with `validated: null`. The operator validates them weekly:
+
+```bash
+python logging/validate_opportunities.py --stats          # see pending count
+python logging/validate_opportunities.py --report         # generate Markdown review doc
+python logging/validate_opportunities.py --validate <id> --result true|false
+```
+
+Only `validated=true` opportunities enter the coverage denominator,  
+preventing the observer's false positives from inflating the missed count.
+
+---
+
+*Phase 3 extension — 2026-04-25. Backward-compatible: all Phase 2 metrics unchanged.*
