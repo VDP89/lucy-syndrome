@@ -2,6 +2,9 @@
 
 **A practitioner framework for making LLM corrections persist across sessions.**
 
+[![CI](https://github.com/VDP89/lucy-syndrome/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/VDP89/lucy-syndrome/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)](https://github.com/VDP89/lucy-syndrome/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/VDP89/lucy-syndrome/blob/main/pyproject.toml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19555971.svg)](https://doi.org/10.5281/zenodo.19555971)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
@@ -180,6 +183,14 @@ The companion paper is available in three places:
 ```
 
 See [CITATION.cff](CITATION.cff) for CFF format.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, scope rules, the scar/hook authoring process, and PR expectations. Bug reports and feature requests are welcome via the templates in [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/).
+
+Release history lives in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
