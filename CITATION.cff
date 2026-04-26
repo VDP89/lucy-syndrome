@@ -9,8 +9,8 @@ authors:
 title: "Lucy Syndrome — A Practitioner Framework for LLM Cross-Session Correction Persistence"
 version: "1.1.0"
 date-released: "2026-04-25"
-url: "https://github.com/Vdp89/lucy-syndrome"
-repository-code: "https://github.com/Vdp89/lucy-syndrome"
+url: "https://github.com/VDP89/lucy-syndrome"
+repository-code: "https://github.com/VDP89/lucy-syndrome"
 license: Apache-2.0
 keywords:
   - LLM

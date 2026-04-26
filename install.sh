@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# install.sh — bootstrap the Lucy Syndrome scarring system into your Claude Code project
+# install.sh -- bootstrap the Lucy Syndrome scarring system into your Claude Code project
 #
 # Usage:
 #   ./install.sh /path/to/your/project
 #
 # What it does:
-#   - Creates .claude/scarring/ and .claude/scarring/hooks/ in your project
-#   - Copies the blank scar template as your first scar to fill in
-#   - Copies the generic session-start hook and example review hook
-#   - Creates a minimal SCARRING_INDEX.md
+#   - Creates .claude/scarring/{hooks,logs}/ in your project
+#   - Copies the blank scar template as scar_001_your_first_scar.md
+#   - Copies the generic SessionStart hook (auto-discovers scars) and example review hook
+#   - Copies the JSONL fire logger
+#   - Wires hooks: writes .claude/settings.json verbatim if absent; otherwise leaves your
+#     settings.json alone and prints merge instructions
+#   - Runs a smoke test against the installed hooks
 #   - Outputs next steps
 
 set -euo pipefail
@@ -33,6 +36,8 @@ CLAUDE_DIR="${PROJECT_DIR}/.claude"
 SCARRING_DIR="${CLAUDE_DIR}/scarring"
 HOOKS_DIR="${SCARRING_DIR}/hooks"
 LOGS_DIR="${SCARRING_DIR}/logs"
+SETTINGS_FILE="${CLAUDE_DIR}/settings.json"
+SETTINGS_EXAMPLE_SRC="${REPO_DIR}/framework/settings.json.example"
 
 # ---- Warn if already installed ----
 if [ -d "$SCARRING_DIR" ]; then
@@ -91,11 +96,17 @@ if [ ! -f "$REV" ]; then
   echo "Copied:  $REV"
 fi
 
-# ---- Copy settings example ----
-SETTINGS_EXAMPLE="${CLAUDE_DIR}/settings.json.example"
-if [ ! -f "$SETTINGS_EXAMPLE" ]; then
-  cp "${REPO_DIR}/framework/settings.json.example" "$SETTINGS_EXAMPLE"
-  echo "Copied:  $SETTINGS_EXAMPLE"
+# ---- Wire settings.json ----
+SETTINGS_WIRED=0
+if [ ! -f "$SETTINGS_FILE" ]; then
+  cp "$SETTINGS_EXAMPLE_SRC" "$SETTINGS_FILE"
+  echo "Created: $SETTINGS_FILE  (hooks wired automatically)"
+  SETTINGS_WIRED=1
+else
+  # Always keep an up-to-date reference example next to user's existing settings.
+  cp "$SETTINGS_EXAMPLE_SRC" "${CLAUDE_DIR}/settings.json.example"
+  echo "Found:   $SETTINGS_FILE  (left untouched -- merge the 'hooks' key manually)"
+  echo "Copied:  ${CLAUDE_DIR}/settings.json.example  (reference)"
 fi
 
 # ---- Create minimal SCARRING_INDEX.md ----
@@ -105,8 +116,8 @@ if [ ! -f "$INDEX" ]; then
 # Scarring Index
 
 > Edit this file to track your active scars.
-> Created by install.sh — Lucy Syndrome framework
-> See https://github.com/Vdp89/lucy-syndrome for full documentation.
+> Created by install.sh -- Lucy Syndrome framework
+> See https://github.com/VDP89/lucy-syndrome for full documentation.
 
 ## Active Scars
 
@@ -116,34 +127,72 @@ if [ ! -f "$INDEX" ]; then
 
 ## Management Policy
 
-- **Append-only**: scars are never deleted. If a scar becomes obsolete, mark it `[ARCHIVED]` with date and reason — the file stays.
+- **Append-only**: scars are never deleted. If a scar becomes obsolete, mark it `[ARCHIVED]` with date and reason -- the file stays.
 - **Lifetime review**: if a scar has not activated in 30 days, review whether the trigger is still relevant.
-- **Refinement**: if a scar fires but the error still occurs, the rule is too fuzzy — edit the scar to sharpen it.
+- **Refinement**: if a scar fires but the error still occurs, the rule is too fuzzy -- edit the scar to sharpen it.
 - **New scars**: if an error pattern recurs 2+ times, codify it as a new scar.
 EOF
   echo "Created: $INDEX"
 fi
 
+# ---- Smoke test ----
+echo ""
+echo "Running smoke test..."
+SMOKE_OK=1
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "  Skipped: python3 not found on PATH. Install Python 3.10+ before using the hooks."
+  SMOKE_OK=0
+else
+  # Run hook_session_start with empty stdin from inside the project dir so the
+  # default SCAR_DIR resolves to the freshly-installed .claude/scarring/.
+  if (cd "$PROJECT_DIR" && echo '{}' | python3 "$HOOKS_DIR/hook_session_start.py" 2>/dev/null) \
+       | python3 -c 'import json, sys; d=json.load(sys.stdin); assert d["hookSpecificOutput"]["hookEventName"]=="SessionStart"' 2>/dev/null; then
+    echo "  OK: hook_session_start.py emits valid SessionStart output"
+  else
+    echo "  FAIL: hook_session_start.py did not emit valid output"
+    SMOKE_OK=0
+  fi
+  # hook_example_review on a small payload should exit silently with no stdout.
+  REVIEW_OUT=$(echo '{"tool_name":"Write","event":"PreToolUse","tool_input":{"file_path":"x.py","content":"x=1"}}' \
+                 | python3 "$HOOKS_DIR/hook_example_review.py" 2>/dev/null || true)
+  if [ -z "$REVIEW_OUT" ]; then
+    echo "  OK: hook_example_review.py exits silently for short files"
+  else
+    echo "  FAIL: hook_example_review.py produced unexpected output for a 1-line file"
+    SMOKE_OK=0
+  fi
+fi
+
 # ---- Done ----
 echo ""
-echo "Installation complete. Next steps:"
+if [ "$SMOKE_OK" -eq 1 ]; then
+  echo "Installation complete and smoke test passed."
+else
+  echo "Installation complete -- smoke test had warnings (see above)."
+fi
+echo ""
+echo "Next steps:"
 echo ""
 echo "  1. Edit the blank scar:"
 echo "       ${FIRST_SCAR}"
 echo "     Fill in what happened, the trigger, the fix."
 echo ""
-echo "  2. Configure hooks in your Claude Code settings:"
-echo "       ${SETTINGS_EXAMPLE}  ← example to adapt"
-echo "       ${CLAUDE_DIR}/settings.json  ← merge the 'hooks' key into here"
+if [ "$SETTINGS_WIRED" -eq 1 ]; then
+  echo "  2. Hooks are wired in ${SETTINGS_FILE}."
+  echo "     Restart Claude Code (or open it from this project) to pick them up."
+else
+  echo "  2. Merge the 'hooks' key from ${CLAUDE_DIR}/settings.json.example"
+  echo "     into your existing ${SETTINGS_FILE}."
+fi
 echo ""
-echo "  3. Add log_scar_fire() calls to your hooks (see logging/README.md):"
-echo "       ${LOGS_DIR}/log_scar_fire.py  ← already installed"
-echo "       ${REPO_DIR}/logging/README.md  ← integration pattern"
+echo "  3. Add log_scar_fire() calls to your custom hooks (see logging/README.md):"
+echo "       ${LOGS_DIR}/log_scar_fire.py  <-- already installed"
+echo "       ${REPO_DIR}/logging/README.md  <-- integration pattern"
 echo ""
 echo "  4. Optionally review the production case for inspiration:"
 echo "       ${REPO_DIR}/examples/production-case/"
 echo ""
-echo "  4. Read the framework guide:"
+echo "  5. Read the framework guide:"
 echo "       ${REPO_DIR}/framework/README.md"
 echo ""
-echo "  Full documentation: https://github.com/Vdp89/lucy-syndrome"
+echo "  Full documentation: https://github.com/VDP89/lucy-syndrome"
