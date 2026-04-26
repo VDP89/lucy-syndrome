@@ -35,7 +35,7 @@ Every scar file has the same sections:
 
 ## The example scars in this directory
 
-These are domain-independent examples derived from the production case (see `../examples/production-case/`). Use them as starting points, not as final implementations — adapt the triggers and fixes to your own environment.
+These are domain-independent examples derived from the production case (see `../examples/production-case/`). Together they cover the universal subset of the production case (5 of 11 production scars; the rest are domain-specific). Use them as starting points, not as final implementations — adapt the triggers and fixes to your own environment.
 
 | File | Severity | Has hook | What it catches |
 |---|---|---|---|
@@ -43,6 +43,9 @@ These are domain-independent examples derived from the production case (see `../
 | `scar_example_002_verify_before_claiming.md` | critical | no | Fabricated external content; wrong day-of-week labels |
 | `scar_example_003_check_context_before_generating.md` | high | no | Generating before consulting the knowledge base |
 | `scar_example_004_validate_subagent_output.md` | high | reference impl. in production-case | Subagent silently omits a file from a batch dispatched via `Task` |
+| `scar_example_005_token_budget_hygiene.md` | medium | no | Context bloat: missed `/clear` between unrelated tasks, unused MCPs left loaded, oversized models on simple subagents |
+| `scar_example_006_pre_deploy_audit.md` | high | no | Inconsistent state shipped to production: retired strings still live, edits applied locally instead of swept globally |
+| `scar_example_007_persist_memory_before_goodbye.md` | high | no | Session-end discoveries lost because memory was not written before the wrap-up message |
 
 ---
 
