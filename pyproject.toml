@@ -21,7 +21,7 @@ addopts = "-v"
 
 [tool.coverage.run]
 branch = true
-omit = ["tests/*", "*/logging/validate_opportunities.py"]
+omit = ["tests/*"]
 
 [tool.coverage.report]
 exclude_lines = [
