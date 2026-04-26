@@ -65,5 +65,5 @@ Initial release accompanying the Zenodo deposit.
 ---
 
 [1.2.0]: https://github.com/VDP89/lucy-syndrome/releases/tag/v1.2.0
-[1.1.0]: https://github.com/VDP89/lucy-syndrome/compare/a809ced...923f17f
-[1.0.0]: https://github.com/VDP89/lucy-syndrome/releases/tag/v1.0.0
+[1.1.0]: https://github.com/VDP89/lucy-syndrome/compare/da76901...923f17f
+[1.0.0]: https://github.com/VDP89/lucy-syndrome/tree/da76901
