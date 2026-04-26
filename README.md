@@ -49,21 +49,30 @@ Scars satisfying all five invariants in the dataset have a measured escape rate 
 ### Install into your Claude Code project
 
 ```bash
-git clone https://github.com/Vdp89/lucy-syndrome.git
+git clone https://github.com/VDP89/lucy-syndrome.git
 cd lucy-syndrome
 ./install.sh /path/to/your/project
 ```
 
-The script creates `.claude/scarring/` in your project with a blank scar template and a minimal session-start hook. From there, add your own scars as mistakes accumulate.
+The installer creates `.claude/scarring/{hooks,logs}/` in your project, drops a blank scar template, copies the SessionStart and example review hooks, and runs a smoke test. If your project has no `.claude/settings.json` yet it writes one with the hooks wired; if you already have one it leaves it untouched and prints the merge instructions.
+
+After the install reports `Installation complete and smoke test passed`, restart Claude Code (or open it from the project) and the SessionStart hook will announce the scarring system on the first prompt.
 
 ### Your first scar
 
-1. Copy `framework/scar_template.md` to `.claude/scarring/scar_001_your_mistake.md`
-2. Fill in the six sections: what happened, where it applies, why it is forgotten, the fix, how to verify, metrics
-3. Edit `hooks/hook_session_start.py` to include a one-line summary of the new scar
-4. Wire the hook into `.claude/settings.json` (see `framework/settings.json.example`)
+1. Edit `.claude/scarring/scar_001_your_first_scar.md` (the placeholder created by `install.sh`) using the six sections in `framework/scar_template.md`: what happened, where it applies, why it is forgotten, the fix, how to verify, metrics.
+2. The SessionStart hook auto-discovers any `scar_*.md` file in `.claude/scarring/` -- no edit to the hook is needed.
+3. If the new scar needs an enforcement hook (PreToolUse / UserPromptSubmit / etc.), copy `framework/hook_template.py` into `.claude/scarring/hooks/` and add a matching entry under `"hooks"` in `.claude/settings.json`.
 
 The first time the trigger fires and the reminder injects automatically, the value of the system becomes concrete.
+
+### Verify the install
+
+```bash
+echo '{}' | python3 .claude/scarring/hooks/hook_session_start.py
+```
+
+Should print a one-line JSON object whose `additionalContext` lists every `scar_*.md` file you have. If it lists `scar_001_your_first_scar.md`, you are wired.
 
 ---
 

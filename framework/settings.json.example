@@ -1,5 +1,5 @@
 {
-  "$comment": "Example Claude Code settings.json wiring for the Lucy Syndrome hooks. Merge the 'hooks' key into your project's .claude/settings.json. Adjust paths if you place hooks somewhere other than .claude/scarring/hooks/. All hooks are warn-only: none block tool calls, they only inject reminder context.",
+  "$comment": "Example Claude Code settings.json wiring for the Lucy Syndrome hooks. install.sh writes this verbatim to .claude/settings.json if no settings file exists yet; otherwise merge the 'hooks' key into your existing settings.json by hand. Adjust paths if you place hooks somewhere other than .claude/scarring/hooks/. All shipped hooks are warn-only: none block tool calls, they only inject reminder context. For richer trigger patterns (subagent batch coverage, prompt-time KB expansion, etc.), see examples/production-case/hooks/ in the repo and adapt to your domain.",
   "hooks": {
     "SessionStart": [
       {
@@ -18,25 +18,6 @@
           {
             "type": "command",
             "command": "python \".claude/scarring/hooks/hook_example_review.py\" 2>/dev/null || true"
-          }
-        ]
-      },
-      {
-        "matcher": "Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python \".claude/scarring/hooks/hook_batch_coverage.py\" 2>/dev/null || true"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python \".claude/scarring/hooks/hook_expand_memory.py\" 2>/dev/null || true"
           }
         ]
       }
