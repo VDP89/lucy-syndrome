@@ -65,11 +65,21 @@ Names of retired projects, partnerships, products, or features. These tend to li
 
 ### Step 4 — Cross-page concordance check
 
-For values that should match across multiple files (canonical title, contact info, version number, copyright year), grep all of them and verify the set of values is exactly one:
+For values that should match across multiple files (canonical title, contact info, version number, copyright year), grep with `-h` (suppress filenames) and reduce to unique matched lines — divergence shows up as more than one unique line:
 
 ```bash
-grep -rn "canonical_value" <src> | awk -F: '{print $3}' | sort -u
-# expect exactly one line
+grep -rh "canonical_value" <src> | sort -u
+# expect exactly one unique line; multiple means the value differs across files
+```
+
+If the value lives in a `key: value` pattern and you only care about the value itself (not the surrounding line), extract it explicitly rather than reaching for `awk -F:` — the colon in `key:` collides with grep's `path:lineno:line` separator and silently collapses different values to the same key token, producing a false-clean audit:
+
+```bash
+# Correct: extract just the value after `canonical_key:`
+grep -rho 'canonical_key:[[:space:]]*\S.*' <src> \
+  | sed 's/^canonical_key:[[:space:]]*//' \
+  | sort -u
+# expect exactly one unique value
 ```
 
 ### Step 5 — Build / type / link check
