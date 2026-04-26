@@ -33,7 +33,7 @@ Every scar file has the same sections:
 
 ---
 
-## The three example scars in this directory
+## The example scars in this directory
 
 These are domain-independent examples derived from the production case (see `../examples/production-case/`). Use them as starting points, not as final implementations — adapt the triggers and fixes to your own environment.
 
@@ -42,6 +42,7 @@ These are domain-independent examples derived from the production case (see `../
 | `scar_example_001_review_before_deliver.md` | high | yes | Code shipped without source-level review |
 | `scar_example_002_verify_before_claiming.md` | critical | no | Fabricated external content; wrong day-of-week labels |
 | `scar_example_003_check_context_before_generating.md` | high | no | Generating before consulting the knowledge base |
+| `scar_example_004_validate_subagent_output.md` | high | reference impl. in production-case | Subagent silently omits a file from a batch dispatched via `Task` |
 
 ---
 
