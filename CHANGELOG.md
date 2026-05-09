@@ -8,6 +8,26 @@ The Zenodo DOI [`10.5281/zenodo.19555971`](https://doi.org/10.5281/zenodo.195559
 
 ---
 
+## [1.3.0] -- 2026-05-09
+
+### Added
+
+- `examples/production-case/hooks/hook_opportunity_observer.py` — Phase 3 observer that logs candidate opportunities to `opportunities.jsonl`, separate from `fires.jsonl`. Provides the recall denominator that was missing in Phase 2: without observed opportunities, recall = fires / fires = 1.0 (trivially useless). With opportunities, recall is a real metric. The observer rules are deliberately broader than the corresponding hook triggers, so an opportunity is a context where a scar *could have* fired, not necessarily one where it did.
+- Companion installable implementation released as a sibling project: [`Vdp89/fscars`](https://github.com/VDP89/fscars) (`pip install fscars`). The `lucy-syndrome` repository remains the academic companion code with stable Zenodo DOI; `fscars` is the clean reference implementation of the framework with a Claude Code adapter, single hook entrypoint, registry, and 5 starter scars in a public cookbook.
+- First derivative essay published: [*From Memory to Scar — Why More Context Did Not Solve LLM Correction Persistence*](https://victordelpuerto.com/posts/from-memory-to-scar/) (May 2026), extending the four-layer progression from the paper with Anthropic's Managed Agents Memory beta (released 2026-04-24) as a working example of Layer 3 industrialized.
+
+### Documented (not new code, new findings)
+
+- **Reincidence A3.1 (2026-04-15).** First post-publication reincidence of `scar_004` documented in operational use. The operator read the memory index (formal compliance with the scar) but did not expand the pointer files. The scar fired in form, failed in function. Filed locally as `02_ANALISIS/incidente_2026-04-15_expansion_vs_lectura.md` (referenced in the paper as a candidate for invariant I4.b).
+- **Reincidence A3.2 (2026-04-22).** Second post-publication reincidence: while documenting the canonical AASHTO/Peltier pull-gravitational case, the agent committed a functionally equivalent error at session close (a stale relative-time reference to an entity that had been mutated within the same session, ~35 minutes / 33 turns earlier). Stronger evidence than A3.1: the framework was active, the canonical case was open in context, and the recurrence happened anyway. Confirms that without enforcement outside the model, even full awareness of the framework does not prevent recurrence.
+
+### Notes
+
+- An additional internal scar (`scar_012`, canal_compartido_sin_briefing — critical severity, blocking) has been operational locally since 2026-04-30 but is **withheld from public release** because the underlying case contains specific commercial-negotiation context that cannot be sanitized without losing the testimonial value of the production case. The pattern (briefings must not travel through shared channels with external recipients) is generic and may appear as a sanitized cookbook entry in the sibling `fscars` project.
+- Schema evolution caveat: the first ~30 fires (April) lack the `opportunity` and `project_context` fields. Consumers of `fires.jsonl` should tolerate both formats. Field versioning is on the roadmap.
+
+---
+
 ## [1.2.0] -- 2026-04-26
 
 ### Added
@@ -64,6 +84,7 @@ Initial release accompanying the Zenodo deposit.
 
 ---
 
+[1.3.0]: https://github.com/VDP89/lucy-syndrome/releases/tag/v1.3.0
 [1.2.0]: https://github.com/VDP89/lucy-syndrome/releases/tag/v1.2.0
 [1.1.0]: https://github.com/VDP89/lucy-syndrome/compare/da76901...923f17f
 [1.0.0]: https://github.com/VDP89/lucy-syndrome/tree/da76901
