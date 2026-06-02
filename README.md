@@ -25,7 +25,7 @@ This repository is a practitioner framework for closing that gap. It contains:
 - **Functional scars** — short structured documents that record a mistake, why it recurs, and the specific operational rule that prevents repetition
 - **Claude Code hooks** — Python scripts that enforce those rules automatically at inference time, without requiring discipline from the operator
 - **An install script** — to bootstrap the system into your own project in under two minutes
-- **A production case study** — the actual 11 scars and 8 hooks from a civil engineering firm running 9 business areas through Claude Code, grounded in 163 findings extracted from 17 operational session logs
+- **A production case study** — the actual 11 scars and 9 hooks from a civil engineering firm running 9 business areas through Claude Code, grounded in 163 findings extracted from 17 operational session logs
 
 The companion research paper (DOI: [10.5281/zenodo.19555971](https://doi.org/10.5281/zenodo.19555971)) describes the underlying dataset, the five persistence invariants, and the three-layer implementation model.
 
@@ -130,7 +130,7 @@ lucy-syndrome/
 │   └── escalation-policy.md   ← thresholds for warn→deny escalation
 │
 ├── examples/
-│   └── production-case/         ← real 11 scars + 8 hooks from production
+│   └── production-case/         ← real 11 scars + 9 hooks from production
 │       ├── README.md           ← context: civil engineering operation, 163 findings
 │       ├── scars/              ← the actual production scar files
 │       └── hooks/              ← the actual production hook scripts (with logging)
@@ -147,7 +147,7 @@ lucy-syndrome/
 
 `examples/production-case/` contains the actual operational scars and hooks from a civil engineering firm in Paraguay running nine business areas through Claude Code. The underlying dataset: 163 findings extracted from 17 source files (15 Claude Code session logs, 2 ChatGPT memory exports), spanning August 2025 to April 2026.
 
-This is not a cleaned-up demo. These are the real files — including the failures, the reincidences, and the evolution of each rule as the system learned what it took to make a correction stick. The production case includes 11 scars and 8 hooks across four hook event types: `SessionStart`, `PreToolUse`, and `UserPromptSubmit`.
+This is not a cleaned-up demo. These are the real files — including the failures, the reincidences, and the evolution of each rule as the system learned what it took to make a correction stick. The production case includes 11 scars and 9 hooks across three hook event types: `SessionStart`, `PreToolUse`, and `UserPromptSubmit`.
 
 Key findings from the production dataset:
 
