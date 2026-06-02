@@ -186,6 +186,13 @@ See [CITATION.cff](CITATION.cff) for CFF format.
 
 ---
 
+## Related projects
+
+- **[fscars](https://github.com/VDP89/fscars)** — the reference implementation of this framework: deterministic correction hooks (functional scars) for Claude Code and Codex.
+- **[callus](https://github.com/VDP89/callus)** — per-author voice calibration built on the same operator-in-the-loop philosophy.
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, scope rules, the scar/hook authoring process, and PR expectations. Bug reports and feature requests are welcome via the templates in [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/).
